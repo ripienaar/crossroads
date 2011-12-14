@@ -17,10 +17,10 @@ _foo.route_
     processor do |headers, body|
       case body.vhost
         when "foo.com"
-	   target "/queue/errors.foo"
+           target "/queue/errors.foo"
 
-	when "bar.com"
-	   target "/queue/errors.bar"
+        when "bar.com"
+           target "/queue/errors.bar"
 
       end
 

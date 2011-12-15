@@ -8,6 +8,8 @@ configfile = "/etc/crossroads/crossroads.yaml"
 daemon = false
 pidfile = nil
 
+Version = Crossroads.version
+
 opt = OptionParser.new
 
 opt.on("--config [FILE]", "Configuration File") do |v|

@@ -21,7 +21,7 @@ module Crossroads
     def route!(msg)
       @targets = []
 
-      if @expression && @processor && @jgrep.match_value({"headers" => msg.headers, "body" => msg.body})
+      if @expression && @processor && @jgrep.match_value({"headers" => msg.headers, "body" => JSON.parse(msg.body)})
         @processor.call(msg.headers, msg.body)
       end
 
@@ -31,7 +31,7 @@ module Crossroads
     end
 
     def target(trgt)
-      @targets << trgt
+      @targets << {:target => trgt, :name => @name}
     end
 
     def processor(&blk)

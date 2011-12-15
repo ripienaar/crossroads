@@ -3,13 +3,29 @@ module Crossroads
     def initialize(dir)
       raise "Cannot find routers directory #{dir}" unless File.directory?(dir)
 
-      @routes = []
       @routesdir = dir
+      @triggerfile = File.join(@routesdir, "reload.txt")
+      @checktime = 0
 
       loadroutes
     end
 
+    def reload_routes
+      if (Time.now - @checktime).to_i > 30
+        if File.exist?(@triggerfile)
+          triggermtime = File::Stat.new(@triggerfile).mtime
+          if triggermtime > @loadtime
+            loadroutes
+          end
+        end
+
+        @checktime = Time.now
+      end
+    end
+
     def route(msg)
+      reload_routes
+
       targets = []
 
       @routes.each do |r|
@@ -41,9 +57,13 @@ module Crossroads
     end
 
     def loadroutes
+      @routes = []
+
       routefiles.each do |route|
         loadroute route
       end
+
+      @loadtime = Time.now
     end
   end
 end

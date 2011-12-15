@@ -26,6 +26,9 @@ module Crossroads
       @router = Router.new(@config[:configdir])
 
       subscribe
+    end
+
+    def run!
       process
     end
 
@@ -37,10 +40,16 @@ module Crossroads
           targets = route(msg)
 
           targets.each do |target|
-            Log.debug("Publishing to #{target[:target]}")
-            @stomp.publish(target[:target], msg.body, msg.headers.merge({"crossroads_route" => target[:name], "crossroads_time" => target[:process_time]}))
+            headers = msg.headers.merge({"crossroads_route" => target[:name], "crossroads_time" => target[:process_time]})
+
+            ["destination", "timestamp", "message-id"].each do |h|
+              headers["crossroads_orig_#{h}"] = headers[h]
+              headers.delete h
+            end
+
+            @stomp.publish(target[:target], msg.body, headers)
           end
-        rescue Interrupt
+        rescue Interrupt, SystemExit
           break
         rescue Exception => e
           Log.error("Failed to consume from the middleware: #{e.class}: #{e}")

@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'crossroads'
+require 'optparse'
+
+configfile = "/etc/crossroads/crossroads.yaml"
+daemon = false
+pidfile = nil
+
+opt = OptionParser.new
+
+opt.on("--config [FILE]", "Configuration File") do |v|
+    configfile = v
+end
+
+opt.on("--daemonize", "-d", "Daemonize the process") do |v|
+    daemon = true
+end
+
+opt.on("--pid [PIDFILE]", "-p", "Write a pidfile") do |v|
+    pidfile = v
+end
+
+opt.parse!
+
+raise "The directory #{configfile} does not exist" unless File.exist?(configfile)
+
+def stop_and_exit(daemon, pidfile, signal)
+    Crossroads::Log.info("Exiting after signal #{signal}")
+
+    if daemon && pidfile
+        File.unlink(pidfile)
+    end
+
+    exit
+end
+
+Signal.trap('INT') { stop_and_exit(daemon, pidfile, :int) }
+Signal.trap('TERM') { stop_and_exit(daemon, pidfile, :term) }
+
+cr = Crossroads.runner("t.yaml")
+
+if daemon
+    raise "Pidfile #{pidfile} exist" if pidfile && File.exist?(pidfile)
+
+    Crossroads.daemonize do
+        if pidfile
+            begin
+                File.open(pidfile, 'w') {|f| f.write(Process.pid) }
+            rescue
+            end
+        end
+
+        cr.run!
+    end
+else
+    cr.run!
+end

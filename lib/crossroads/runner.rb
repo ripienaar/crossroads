@@ -38,7 +38,7 @@ module Crossroads
 
           targets.each do |target|
             Log.debug("Publishing to #{target[:target]}")
-            @stomp.publish(target[:target], msg.body, msg.headers.merge({"crossroads_route" => target[:name]}))
+            @stomp.publish(target[:target], msg.body, msg.headers.merge({"crossroads_route" => target[:name], "crossroads_time" => target[:process_time]}))
           end
         rescue Interrupt
           break
